@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mausam Guru</title>
+  <style>
+    :root {
+      --bg-light: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+      --bg-dark: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      --text-light: #212121;
+      --text-dark: #e0e0e0;
+      --card-light: #ffffff;
+      --card-dark: #1e2b30;
+      --accent: #00acc1;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: all 0.3s ease;
+    }
+
+    .dark-mode {
+      background: var(--bg-dark) !important;
+      color: var(--text-dark);
+    }
+
+    .dark-mode button {
+      background-color: #00bcd4;
+      color: #ffffff;
+    }
+
+    .cloudy-bg {
+      background: linear-gradient(to top, #d7d2cc 0%, #304352 100%) !important;
+    }
+
+    .rainy-bg {
+      background: linear-gradient(to top, #4e54c8 0%, #8f94fb 100%) !important;
+    }
+
+    .sunny-bg {
+      background: linear-gradient(to top, #ffe259 0%, #ffa751 100%) !important;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    input {
+      width: 90%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      outline: none;
+    }
+
+    ul#suggestions {
+      list-style: none;
+      padding: 0;
+      margin: 0 auto 10px;
+      width: 90%;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      background: var(--card-light);
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .dark-mode ul#suggestions {
+      background: var(--card-dark);
+      color: var(--text-dark);
+    }
+
+    ul#suggestions li {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    ul#suggestions li:hover {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      background-color: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #007c91;
+    }
+
+    .card {
+      background: var(--card-light);
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+
+    .dark-mode .card {
+      background: var(--card-dark);
+      color: var(--text-dark);
+    }
+
+    .styled-weather {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .styled-weather img {
+      display: block;
+      margin: 10px auto;
+    }
+
+    .forecast-wrapper {
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+
+    .forecast-container {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 10px;
+      padding: 10px 0;
+    }
+
+    .forecast-card {
+      min-width: 100px;
+      flex: 0 0 auto;
+      background: var(--card-light);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .dark-mode .forecast-card {
+      background: var(--card-dark);
+      color: var(--text-dark);
+    }
+
+    .toggle-icon {
+      font-size: 24px;
+      display: inline-block;
+    }
+
+    .dark-mode .toggle-icon.sun {
+      display: none;
+    }
+
+    .sun {
+      display: inline-block;
+    }
+
+    .moon {
+      display: none;
+    }
+
+    .dark-mode .moon {
+      display: inline-block;
+    }
+    .circle-image-wrapper {
+  width: 150px;
+  height: 150px;
+  margin: 20px auto;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #00acc1;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.circle-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+  </style>
+</head>
+<body>
+  <div class="circle-image-wrapper">
+  <img src="C:/Users/ASUS/OneDrive/Desktop/weather.png" alt="Weather Logo" />
+</div>
+
+
+<div class="container">
+  <h2>Climate Radar</h2>
+  <input type="text" id="cityInput" placeholder="Enter Indian city..." oninput="autocompleteCity()" />
+  <ul id="suggestions"></ul>
+  <div>
+    <button onclick="searchWeather()">🔍 Search</button>
+    <button onclick="getLocation()">📍 Use My Location</button>
+    <button onclick="toggleMode()">
+      <span class="toggle-icon sun">🌞</span>
+      <span class="toggle-icon moon">🌛</span>
+    </button>
+  </div>
+  <div id="weatherInfo" class="card">🔍 Search any city to view weather...</div>
+  <div class="forecast-wrapper">
+    <div id="forecastInfo" class="forecast-container"></div>
+  </div>
+</div>
+<script>
+  const apiKey = "f1f260eed5b49d105535b9ec0b495d73";
+let currentCity = null;
+
+const indianCityDistricts = [
+  { city: "Lucknow" }, { city: "Kanpur" }, { city: "Varanasi" }, { city: "Prayagraj" },
+  { city: "Noida" }, { city: "Agra" }, { city: "Jaipur" }, { city: "Udaipur" },
+  { city: "Mumbai" }, { city: "Nagpur" }, { city: "Pune" }, { city: "Chennai" },
+  { city: "Hyderabad" }, { city: "Bengaluru" }, { city: "Kolkata" }, { city: "Patna" },
+  { city: "Guwahati" }, { city: "Ranchi" }, { city: "Raipur" }, { city: "Thiruvananthapuram" },
+  { city: "Visakhapatnam" }, { city: "Amritsar" }, { city: "Jamshedpur" }, { city: "Bareilly" }
+];
+
+function toggleMode() {
+  document.body.classList.toggle("dark-mode");
+}
+
+function autocompleteCity() {
+  const input = document.getElementById("cityInput").value.toLowerCase();
+  const suggestionBox = document.getElementById("suggestions");
+  suggestionBox.innerHTML = "";
+  if (input.trim() === "") return;
+  const matches = indianCityDistricts.filter(entry =>
+    entry.city.toLowerCase().startsWith(input)
+  );
+  matches.forEach(entry => {
+    const li = document.createElement("li");
+    li.textContent = entry.city;
+    li.onclick = () => {
+      document.getElementById("cityInput").value = entry.city;
+      suggestionBox.innerHTML = "";
+    };
+    suggestionBox.appendChild(li);
+  });
+}
+
+function searchWeather() {
+  const city = document.getElementById("cityInput").value;
+  if (!city) return alert("Please enter a city!");
+  currentCity = city;
+  fetchWeatherAndForecast(city);
+}
+
+function fetchWeatherAndForecast(city) {
+  fetch(https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric)
+    .then(res => res.json())
+    .then(data => {
+      showWeather(data);
+      fetchForecast(city);
+    })
+    .catch(() => showError());
+}
+
+function getLocation() {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      fetch(https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric)
+        .then(res => res.json())
+        .then(data => {
+          currentCity = data.name;
+          showWeather(data);
+          fetchForecast(data.name);
+        });
+    }, () => alert("Location access denied."));
+  } else {
+    alert("Geolocation not supported.");
+  }
+}
+
+function showWeather(data) {
+  const { name, main, weather, wind, timezone } = data;
+  const icon = weather[0].icon;
+  const condition = weather[0].main.toLowerCase();
+
+  // Set background
+  document.body.classList.remove("cloudy-bg", "rainy-bg", "sunny-bg");
+  if (condition.includes("cloud")) {
+    document.body.classList.add("cloudy-bg");
+  } else if (condition.includes("rain")) {
+    document.body.classList.add("rainy-bg");
+  } else if (condition.includes("clear")) {
+    document.body.classList.add("sunny-bg");
+  }
+
+  const localDate = new Date(Date.now() + timezone * 1000);
+  const dateStr = localDate.toLocaleDateString('en-IN', {
+    weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'
+  });
+
+  document.getElementById("weatherInfo").innerHTML = `
+    <div class="styled-weather">
+      <h3>📍 ${name}</h3>
+      <p>📅 <strong>Date:</strong> ${dateStr}</p>
+      <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${weather[0].description}" />
+      <p>🌡 <strong>Temperature:</strong> ${main.temp} °C</p>
+      <p>💧 <strong>Humidity:</strong> ${main.humidity}%</p>
+      <p>🌬 <strong>Wind:</strong> ${wind.speed} km/h</p>
+      <p>☁ <strong>Condition:</strong> ${weather[0].description}</p>
+    </div>
+  `;
+}
+
+function fetchForecast(city) {
+  fetch(https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric)
+    .then(res => res.json())
+    .then(data => {
+      const forecastContainer = document.getElementById("forecastInfo");
+      forecastContainer.innerHTML = "";
+
+      const daily = {};
+      data.list.forEach(item => {
+        const date = item.dt_txt.split(" ")[0];
+        if (!daily[date]) daily[date] = [];
+        daily[date].push(item);
+      });
+
+      const days = Object.keys(daily).slice(1, 8); // skip today, show next 7 days
+      days.forEach(date => {
+        const temps = daily[date].map(d => d.main.temp);
+        const avgTemp = Math.round(temps.reduce((a, b) => a + b, 0) / temps.length);
+        const icon = daily[date][0].weather[0].icon;
+        const dayName = new Date(date).toLocaleDateString("en-IN", { weekday: 'short' });
+
+        forecastContainer.innerHTML += `
+          <div class="forecast-card">
+            <h4>${dayName}</h4>
+            <img src="https://openweathermap.org/img/wn/${icon}.png" />
+            <p>${avgTemp}°C</p>
+          </div>
+        `;
+      });
+    });
+}
+
+function showError() {
+  document.getElementById("weatherInfo").innerHTML = "⚠ Weather data not available.";
+  document.getElementById("forecastInfo").innerHTML = "";
+}
+
+// Auto-refresh every 30 mins
+setInterval(() => {
+  if (currentCity) {
+    fetchWeatherAndForecast(currentCity);
+  }
+}, 1800000); // 30 mins
+</script>
+</body>
+</html> 
